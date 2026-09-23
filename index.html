@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Retro Bowl Offline Launcher</title>
+    <style>
+        /* Forces the game to fill the entire window offline */
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000;
+        }
+        iframe {
+            width: 100%; height: 100%; border: none;
+        }
+        /* Style for the floating transfer panel */
+        #saveMenu {
+            position: fixed; bottom: 10px; right: 10px; z-index: 99999;
+            background: rgba(0, 0, 0, 0.85); padding: 8px; border-radius: 6px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5); font-family: sans-serif;
+        }
+        #saveMenu button {
+            background: #222; color: #fff; border: 1px solid #555; padding: 6px 12px;
+            cursor: pointer; font-size: 12px; font-weight: bold; border-radius: 4px; margin-left: 5px;
+        }
+        #saveMenu button:hover { background: #444; }
+    </style>
+</head>
+<body>
+
+    <!-- CHANGE 'retro_bowl_game.html' TO THE EXACT NAME OF YOUR RETRO BOWL FILE -->
+    <iframe src="retro-bowl.html"></iframe>
+
+    <!-- Floating Save/Load Overlay -->
+    <div id="saveMenu">
+        <button id="exportSave">⬇️ Export Save</button>
+        <button id="importSave">⬆️ Import Save</button>
+        <input type="file" id="filePicker" style="display: none;" accept=".json">
+    </div>
+
+    <script>
+        // === EXPORT FEATURE ===
+        document.getElementById('exportSave').addEventListener('click', () => {
+            // Gathers ALL offline data stored by Retro Bowl instantly
+            const allData = JSON.stringify(localStorage);
+            
+            if (allData === '{}') {
+                alert('No save data found to export! Play a game first.');
+                return;
+            }
+
+            const blob = new Blob([allData], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            
+            a.href = url;
+            a.download = 'retro_bowl_offline_save.json';
+            document.body.appendChild(a);
+            a.click();
+            
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+
+        // === IMPORT FEATURE ===
+        const filePicker = document.getElementById('filePicker');
+        
+        document.getElementById('importSave').addEventListener('click', () => {
+            filePicker.click();
+        });
+
+        filePicker.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const backup = JSON.parse(evt.target.result);
+                    
+                    // Clear out existing browser data safely 
+                    localStorage.clear();
+                    
+                    // Repopulate with the imported game file
+                    for (const key in backup) {
+                        localStorage.setItem(key, backup[key]);
+                    }
+                    
+                    alert('Save loaded! Reloading game...');
+                    window.location.reload();
+                } catch (err) {
+                    alert('Error: This file is not a valid Retro Bowl save package.');
+                }
+            };
+            reader.readAsText(file);
+        });
+    </script>
+</body>
+</html>
