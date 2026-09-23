@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Adventure Capitalist Offline Launcher</title>
+    <title>Retro Bowl Offline Launcher</title>
     <style>
         /* Forces the game to fill the entire window offline */
         body, html {
@@ -11,61 +11,53 @@
         iframe {
             width: 100%; height: 100%; border: none;
         }
-        /* Style for the floating transfer panel themed to green/gold */
+        /* Style for the floating transfer panel */
         #saveMenu {
             position: fixed; bottom: 10px; right: 10px; z-index: 99999;
-            background: rgba(18, 53, 36, 0.95); padding: 8px; border-radius: 6px;
+            background: rgba(0, 0, 0, 0.85); padding: 8px; border-radius: 6px;
             box-shadow: 0 0 10px rgba(0,0,0,0.5); font-family: sans-serif;
-            border: 1px solid #d4af37;
         }
         #saveMenu button {
-            background: #d4af37; color: #123524; border: none; padding: 6px 12px;
+            background: #222; color: #fff; border: 1px solid #555; padding: 6px 12px;
             cursor: pointer; font-size: 12px; font-weight: bold; border-radius: 4px; margin-left: 5px;
         }
-        #saveMenu button:hover { background: #f3cf55; }
+        #saveMenu button:hover { background: #444; }
     </style>
 </head>
 <body>
 
-    <!-- Target the exact name of your Adventure Capitalist HTML file here -->
-    <iframe id="gameFrame" src="adventure-capitalist.html"></iframe>
+    <!-- CHANGE 'retro_bowl_game.html' TO THE EXACT NAME OF YOUR RETRO BOWL FILE -->
+    <iframe src="retro-bowl.html"></iframe>
 
     <!-- Floating Save/Load Overlay -->
     <div id="saveMenu">
-        <button id="exportSave">💰 Export Save</button>
-        <button id="importSave">💼 Import Save</button>
+        <button id="exportSave">⬇️ Export Save</button>
+        <button id="importSave">⬆️ Import Save</button>
         <input type="file" id="filePicker" style="display: none;" accept=".json">
     </div>
 
     <script>
-        const iframe = document.getElementById('gameFrame');
-
         // === EXPORT FEATURE ===
         document.getElementById('exportSave').addEventListener('click', () => {
-            try {
-                // Targets the inside of the iframe to get your active game numbers
-                const frameStorage = iframe.contentWindow.localStorage;
-                const allData = JSON.stringify(frameStorage);
-                
-                if (allData === '{}' || Object.keys(frameStorage).length === 0) {
-                    alert('No business progress found inside the game frame to export! Buy a business first.');
-                    return;
-                }
-
-                const blob = new Blob([allData], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                
-                a.href = url;
-                a.download = 'adventure_capitalist_save.json';
-                document.body.appendChild(a);
-                a.click();
-                
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            } catch (err) {
-                alert('Security Block: Open this index file using a local web server (like VS Code Live Server) so the frame can safely share data.');
+            // Gathers ALL offline data stored by Retro Bowl instantly
+            const allData = JSON.stringify(localStorage);
+            
+            if (allData === '{}') {
+                alert('No save data found to export! Play a game first.');
+                return;
             }
+
+            const blob = new Blob([allData], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            
+            a.href = url;
+            a.download = 'retro_bowl_offline_save.json';
+            document.body.appendChild(a);
+            a.click();
+            
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         });
 
         // === IMPORT FEATURE ===
@@ -83,27 +75,19 @@
             reader.onload = function(evt) {
                 try {
                     const backup = JSON.parse(evt.target.result);
-                    const targetWindow = iframe.contentWindow;
                     
-                    // Clear the frame's data cache completely 
-                    targetWindow.localStorage.clear();
+                    // Clear out existing browser data safely 
+                    localStorage.clear();
                     
-                    // Repopulate with your imported backup values
+                    // Repopulate with the imported game file
                     for (const key in backup) {
-                        targetWindow.localStorage.setItem(key, backup[key]);
+                        localStorage.setItem(key, backup[key]);
                     }
                     
-                    alert('Save loaded! Destroying active game loop variables...');
-                    
-                    // BREAKS THE RAM LOOP: Force drops the iframe to blank before refreshing to make the numbers stick
-                    const gameUrl = iframe.src;
-                    iframe.src = 'about:blank';
-                    setTimeout(() => {
-                        iframe.src = gameUrl;
-                    }, 50);
-
+                    alert('Save loaded! Reloading game...');
+                    window.location.reload();
                 } catch (err) {
-                    alert('Error: This file is not a valid save package configuration.');
+                    alert('Error: This file is not a valid Retro Bowl save package.');
                 }
             };
             reader.readAsText(file);
