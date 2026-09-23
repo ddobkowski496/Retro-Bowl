@@ -26,46 +26,23 @@
 </head>
 <body>
 
-    <!-- Target iframe with an ID for data syncing -->
-    <iframe id="gameFrame" src="retro-bowl.html"></iframe>
+    <!-- CHANGE 'retro_bowl_game.html' TO THE EXACT NAME OF YOUR RETRO BOWL FILE -->
+    <iframe src="retro_bowl_game.html"></iframe>
 
     <!-- Floating Save/Load Overlay -->
     <div id="saveMenu">
         <button id="exportSave">⬇️ Export Save</button>
         <button id="importSave">⬆️ Import Save</button>
-        <button id="cleanSaves" style="color: #ff4d4d; border-color: #883333;">🧹 Clean Dupes</button>
         <input type="file" id="filePicker" style="display: none;" accept=".json">
     </div>
 
     <script>
-        // === STORAGE CLEANER FUNCTION ===
-        // Keeps only the most recent core game slots and wipes dynamic temp junk
-        function runStorageCleanup() {
-            const keysToKeep = ['RetroBowl.0', 'RetroBowl.1', 'RetroBowl.2', 'RetroBowl.3', 'RetroBowl.settings'];
-            let removedCount = 0;
-
-            for (let i = localStorage.length - 1; i >= 0; i--) {
-                const key = localStorage.key(i);
-                // If it isn't one of the core 4 save slots or settings, destroy it
-                if (!keysToKeep.some(keepKey => key.startsWith(keepKey))) {
-                    localStorage.removeItem(key);
-                    removedCount++;
-                }
-            }
-            return removedCount;
-        }
-
-        // Run cleanup automatically on boot to prevent file expansion
-        runStorageCleanup();
-
         // === EXPORT FEATURE ===
         document.getElementById('exportSave').addEventListener('click', () => {
-            // First run a quick cleanup so the exported file is small and singular
-            runStorageCleanup();
-
+            // Gathers ALL offline data stored by Retro Bowl instantly
             const allData = JSON.stringify(localStorage);
             
-            if (allData === '{}' || localStorage.length === 0) {
+            if (allData === '{}') {
                 alert('No save data found to export! Play a game first.');
                 return;
             }
@@ -75,7 +52,7 @@
             const a = document.createElement('a');
             
             a.href = url;
-            a.download = 'retro_bowl_single_save.json';
+            a.download = 'retro_bowl_offline_save.json';
             document.body.appendChild(a);
             a.click();
             
@@ -99,31 +76,21 @@
                 try {
                     const backup = JSON.parse(evt.target.result);
                     
-                    // Nuke everything first to ensure a fresh slate
+                    // Clear out existing browser data safely 
                     localStorage.clear();
                     
-                    // Repopulate using only structural game tags
-                    const keysToKeep = ['RetroBowl.0', 'RetroBowl.1', 'RetroBowl.2', 'RetroBowl.3', 'RetroBowl.settings'];
+                    // Repopulate with the imported game file
                     for (const key in backup) {
-                        if (keysToKeep.some(keepKey => key.startsWith(keepKey))) {
-                            localStorage.setItem(key, backup[key]);
-                        }
+                        localStorage.setItem(key, backup[key]);
                     }
                     
-                    alert('Save loaded cleanly! Reloading game...');
+                    alert('Save loaded! Reloading game...');
                     window.location.reload();
                 } catch (err) {
                     alert('Error: This file is not a valid Retro Bowl save package.');
                 }
             };
             reader.readAsText(file);
-        });
-
-        // === MANUAL CLEAN BUTTON ===
-        document.getElementById('cleanSaves').addEventListener('click', () => {
-            const cleaned = runStorageCleanup();
-            alert(`Cleanup complete! Deleted ${cleaned} redundant save variants.`);
-            document.getElementById('gameFrame').contentWindow.location.reload();
         });
     </script>
 </body>
